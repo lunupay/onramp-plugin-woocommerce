@@ -1,6 +1,6 @@
 <?php
 /**
-* Plugin Name: Lunu F2C for WooCommerce - Lunu Cryptocurrencies Payment Gateway Addon
+* Plugin Name: Lunu Onramp for WooCommerce - Lunu Cryptocurrencies Payment Gateway Addon
 * Plugin URI: https://lunu.io/plugins
 * Description: Cryptocurrencies Payment Gateway plugin.
 * Version: 2.0
@@ -217,7 +217,7 @@ if (!defined('LUNUPAYMENT_F2C_WC_AFFILIATE_KEY')) {
 		$this->lunu_logs_enabled = trim($this->get_option('lunu_logs_enabled')) === 'yes';
 
 		if (!$this->title) {
-		  $this->title = __('Lunu F2C Payment', LUNUPAYMENT_F2C_WC);
+		  $this->title = __('Lunu Onramp Payment', LUNUPAYMENT_F2C_WC);
 		}
 		return true;
 	  }
@@ -249,7 +249,7 @@ if (!defined('LUNUPAYMENT_F2C_WC_AFFILIATE_KEY')) {
 			'title' => __('Enable/Disable', LUNUPAYMENT_F2C_WC),
 			'type' => 'checkbox',
 			'default' => (LUNUPAYMENT_F2C_WC_AFFILIATE_KEY == 'lunupayment' ? 'yes' : 'no'),
-			'label' => __("Enable Lunu F2C Payments in WooCommerce", LUNUPAYMENT_F2C_WC)
+			'label' => __("Enable Lunu Onramp Payments in WooCommerce", LUNUPAYMENT_F2C_WC)
 		  ),
 		  'api_secret' => array(
 			'title' => __('API Token', LUNUPAYMENT_F2C_WC),
@@ -284,10 +284,16 @@ if (!defined('LUNUPAYMENT_F2C_WC_AFFILIATE_KEY')) {
 		  return 'https://api.exchange.sandbox.lunupay.com';
 		} else {
 		  return 'https://api.exchange.lunupay.com';
-
 		}
-	  
-	}
+	  }
+
+	  public function getWidgetUrlEndpoint() {
+		if ($this->use_sandbox) {
+		  return 'https://exchange.sandbox.lunupay.com';
+		} else {
+		  return 'https://exchange.lunupay.com';
+		}
+	  }
 
 	  public function process_payment($order_id) {
 		global $woocommerce;
@@ -341,6 +347,7 @@ if (!defined('LUNUPAYMENT_F2C_WC_AFFILIATE_KEY')) {
 		  $order->update_meta_data('_lunuf2cpayment_customer_id', $result['customer_id']);
 		}
 		$order->update_meta_data('_lunuf2cpayment_status', LUNUPAYMENT_F2C_STATUS_PENDING);
+		$order->update_meta_data('_lunuf2cpayment_redirect_url', $result['redirect_url']);
 		$order->save();
 
 		$woocommerce->cart->empty_cart();
@@ -400,6 +407,47 @@ if (!defined('LUNUPAYMENT_F2C_WC_AFFILIATE_KEY')) {
 			. "</div><br>";
 		  return true;
 		}
+
+		/* IFRAME WIDGET - commented out due to CSP frame-ancestors restriction on exchange.sandbox.lunupay.com
+		if ($order_status === 'pending' || $payment_status === LUNUPAYMENT_F2C_STATUS_PENDING) {
+		  $redirect_url = $order->get_meta('_lunuf2cpayment_redirect_url', true);
+
+		  if (!empty($redirect_url)) {
+			$widget_base_url = $this->getWidgetUrlEndpoint();
+			echo "<script>
+			  window.jQuery && jQuery(document).ready(function() {
+				jQuery('.entry-title').text('" . esc_js(__('Pay Now', LUNUPAYMENT_F2C_WC)) . "');
+				jQuery('.woocommerce-thankyou-order-received').remove();
+			  });
+			</script>
+			<div id=\"payment-form\"></div><br><br>
+			<script>
+			(function(d, t) {
+			  var n = d.getElementsByTagName(t)[0], s = d.createElement(t);
+			  s.type = 'text/javascript';
+			  s.charset = 'utf-8';
+			  s.async = true;
+			  s.src = '" . esc_url($widget_base_url) . "/iframe.js?t=' + 1 * new Date();
+			  s.onload = function() {
+				const widget = new window.Lunu.widgets.Replenishment({
+				  baseUrl: '" . esc_js($redirect_url) . "',
+				  params: {},
+				  onClose() {
+					widget.remove();
+				  },
+				});
+			  };
+			  n.parentNode.insertBefore(s, n);
+			})(document, 'script');
+			</script>";
+		  } else {
+			echo "<div class='woocommerce-info'>"
+			  . __('Your payment is being processed. Please wait for confirmation.', LUNUPAYMENT_F2C_WC)
+			  . "</div><br>";
+		  }
+		  return true;
+		}
+		*/
 
 		if ($payment_status === LUNUPAYMENT_F2C_STATUS_AWAITING_CONFIRMATION) {
 		  echo "<div class='woocommerce-info'>"
