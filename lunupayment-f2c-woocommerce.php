@@ -176,8 +176,8 @@ if (!defined('LUNUPAYMENT_F2C_WC_AFFILIATE_KEY')) {
 	  public function __construct() {
 
 		$this->id = 'lunuf2cpayments';
-		$this->method_title = __('Lunu F2C Payment', LUNUPAYMENT_F2C_WC);
-		$this->method_description = 'Fiat-to-Crypto payments via Lunu F2C.';
+		$this->method_title = __('Lunu Onramp Payment', LUNUPAYMENT_F2C_WC);
+		$this->method_description = 'Fiat-to-Crypto payments via Lunu Onramp.';
 		$this->has_fields = false;
 		$this->supports = array('products');
 
@@ -495,7 +495,7 @@ if (!defined('LUNUPAYMENT_F2C_WC_AFFILIATE_KEY')) {
 
 		if ($payment_status === LUNUPAYMENT_F2C_STATUS_PAID) {
 		  $order->payment_complete();
-		  $order->set_status(LUNUPAYMENT_F2C_WC_STATUS_PROCESSING, 'Payment Received via Lunu F2C service<br/>');
+		  $order->set_status(LUNUPAYMENT_F2C_WC_STATUS_PROCESSING, 'Payment Received via Lunu Onramp service<br/>');
 		  $order->save();
 		  return true;
 
@@ -504,7 +504,7 @@ if (!defined('LUNUPAYMENT_F2C_WC_AFFILIATE_KEY')) {
 		  return true;
 
 		} else {
-		  $order->set_status(LUNUPAYMENT_F2C_WC_STATUS_CANCELED, 'Payment failed via Lunu F2C service<br/>');
+		  $order->set_status(LUNUPAYMENT_F2C_WC_STATUS_CANCELED, 'Payment failed via Lunu Onramp service<br/>');
 		  $order->save();
 		  return true;
 		}
